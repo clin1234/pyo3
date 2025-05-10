@@ -164,7 +164,7 @@ const STATE_READY_WIDTH: u8 = 1;
 /// Memory layout of C bitfields is implementation defined, so these functions are still
 /// unsafe. Users must verify that they work as expected on the architectures they target.
 #[repr(C)]
-#[repr(align(4))]
+//#[repr(align(4))]
 struct PyASCIIObjectState {
     bitfield_align: [u8; 0],
     bitfield: BitfieldUnit<[u8; 4usize]>,
@@ -365,6 +365,7 @@ impl From<PyASCIIObjectState> for u32 {
 }
 
 #[repr(C)]
+#[deprecated(note = "See https://github.com/python/cpython/pull/133085")]
 pub struct PyASCIIObject {
     pub ob_base: PyObject,
     pub length: Py_ssize_t,
@@ -391,13 +392,25 @@ pub struct PyASCIIObject {
     /// unsigned int statically_allocated:1;
     /// unsigned int :24;
     ///
-    /// 3.14 and later:
-    /// uint16_t interned;   // SSTATE_* constants.
+    /// 3.14 and later (with GIL):
+    /// uint16_t interned:2;   // SSTATE_* constants.
     /// unsigned short kind:3; // PyUnicode_*_KIND constants.
     /// unsigned short compact:1;
     /// unsigned short ascii:1;
     /// unsigned int statically_allocated:1;
     /// unsigned int :10;
+    /// 
+    /// /// 3.14 and later (no GIL):
+    /// unsigned char interned;   // SSTATE_* constants.
+    /// unsigned int kind:3; // PyUnicode_*_KIND constants.
+    /// unsigned int compact:1;
+    /// unsigned int ascii:1;
+    /// unsigned int statically_allocated:1;
+    /// unsigned int :10;
+    #[cfg(Py_3_14)]
+    #[repr(align(4))]
+    pub state: u32,
+    #[cfg(not(Py_3_14))]
     pub state: u32,
     #[cfg(not(Py_3_12))]
     pub wstr: *mut wchar_t,
