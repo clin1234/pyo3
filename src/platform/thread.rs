@@ -1,3 +1,4 @@
+use core::ffi::c_ulong;
 use core::num::NonZero;
 
 use pyo3_ffi::PyThread_get_thread_ident;
@@ -20,4 +21,4 @@ impl Thread {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub struct ThreadId(NonZero<u64>);
+pub struct ThreadId(NonZero<c_ulong>);
